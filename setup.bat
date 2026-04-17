@@ -13,6 +13,6 @@ echo.
 echo Setup complete!
 echo Run:
 echo venv\Scripts\activate
-echo python main.py
+echo python simulation.py
 
 pause

@@ -36,36 +36,46 @@ def decide_next_move(aid, start, goal, world, predicted_positions, mode):
 # ==========================================
 # MAIN SIMULATION
 # ==========================================
+import config
+
 w = World()
+w.generate_environment()
 coord = Coordinator(w)
 vis = Visualizer(w)
+
+print(f"\nENVIRONMENT TYPE: {getattr(config, 'ENV_TYPE', 'UNKNOWN')}")
 
 metrics = {
     'steps_taken': 0,
     'collisions_avoided': 0,
-    'wait_actions': 0
+    'wait_actions': 0,
+    'task_completed': False
 }
 
 # Provide an initial trail sync
 vis.update(metrics=metrics, mode=MODE)
 
 # Run simulation
-for step in range(20):
+MAX_STEPS = 1000
+for step in range(MAX_STEPS):
     print(f"\n--- STEP {step} ---")
     metrics['steps_taken'] += 1
     
     events = []
 
-    # 1. Allocate tasks
+    # 1. Update failures
+    coord.update_failures()
+
+    # 2. Allocate tasks
     coord.allocate_tasks()
 
-    # 2. Simulate failure at step 5
+    # 3. Simulate failure at step 5
     if step == 5:
         print("\n*** FAILURE EVENT: Agent 1 ***")
         coord.handle_agent_failure(1)
         events.append("AGENT FAILURE DETECTED: Agent 1")
 
-    # 3. Decide movements with Mode Handling
+    # 4. Decide movements with Mode Handling
     intended_actions = {}
     paths = {}
     predicted_positions = set()
@@ -99,7 +109,7 @@ for step in range(20):
         if next_step != start:
             predicted_positions.add(next_step)
 
-    # 4. Resolve collisions
+    # 5. Resolve collisions
     safe_actions = coord.resolve_collisions(intended_actions)
     
     # Analyze metrics
@@ -111,28 +121,44 @@ for step in range(20):
         if safe_actions[aid] == w.agent_positions[aid]:
             metrics['wait_actions'] += 1
 
-    # 5. Capture old positions for animation
+    # 6. Capture old positions for animation
     old_positions = {aid: pos for aid, pos in w.agent_positions.items()}
 
-    # 6. Update positions
+    # 7. Update positions
     w.update_positions(safe_actions)
 
-    # 7. Print state
+    # Check for joint task completion
+    if w.check_joint_task_complete():
+        metrics['task_completed'] = True
+        events.append("TASK COMPLETED!")
+        print("TASK COMPLETED SUCCESSFULLY")
+
+    # 8. Print state
     w.print_state()
 
-    # 8. Update visualization with smooth animation and metrics
+    # 9. Update visualization with smooth animation and metrics
     new_positions = {aid: pos for aid, pos in w.agent_positions.items()}
     vis.animate_step(old_positions, new_positions, paths, events, metrics, MODE)
+
+    if metrics['task_completed']:
+        break
 
 # ==========================================
 # METRICS AND END
 # ==========================================
-print("\n===== METRICS =====")
+print("\n===== FINAL RESULTS =====")
 print(f"Mode: {MODE}")
-print(f"Steps: {metrics['steps_taken']}")
+print(f"Task Completed: {'YES' if metrics['task_completed'] else 'NO'}")
+print(f"Steps Taken: {metrics['steps_taken']}")
 print(f"Collisions Avoided: {metrics['collisions_avoided']}")
 print(f"Wait Actions: {metrics['wait_actions']}")
-print("===================")
+
+optimal_steps = 22 # Manhattan dist from (1,1) to (12,12)
+efficiency = optimal_steps / metrics['steps_taken'] if metrics['steps_taken'] > 0 else 0
+coordination_score = 1 / (1 + metrics['wait_actions'])
+print(f"Efficiency: {efficiency:.4f}")
+print(f"Coordination Score: {coordination_score:.4f}")
+print("=========================")
 
 print("\nSimulation finished. Close window to exit.")
 

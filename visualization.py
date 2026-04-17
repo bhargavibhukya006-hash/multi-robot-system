@@ -108,6 +108,11 @@ class Visualizer:
                 pygame.draw.line(self.screen, RED, (center_x - 5, center_y - 5), (center_x + 5, center_y + 5), 2)
                 pygame.draw.line(self.screen, RED, (center_x - 5, center_y + 5), (center_x + 5, center_y - 5), 2)
             else:
+                # Highlight roles
+                role = self.world.agent_roles[aid]
+                if role in ["PRIMARY_CARRIER", "SECONDARY_CARRIER"]:
+                    pygame.draw.circle(self.screen, YELLOW, (center_x, center_y), (CELL_SIZE // 3) + 3, 3)
+
                 pygame.draw.circle(self.screen, base_color, (center_x, center_y), CELL_SIZE // 3)
                 
                 # Draw directional triangle/arrow
@@ -165,6 +170,15 @@ class Visualizer:
             # we rely on large_font or just use default
             surf = self.font.render(text, True, color)
             self.screen.blit(surf, (10, 10 + idx * 20))
+
+        if metrics.get('task_completed'):
+            big_font = pygame.font.SysFont("Arial", 48, bold=True)
+            text_surf = big_font.render("TASK COMPLETED!", True, GREEN)
+            rect = text_surf.get_rect(center=(self.size // 2, self.size // 4))
+            bg_rect = rect.inflate(20, 20)
+            pygame.draw.rect(self.screen, WHITE, bg_rect)
+            pygame.draw.rect(self.screen, GREEN, bg_rect, 4)
+            self.screen.blit(text_surf, rect)
 
     def animate_step(self, old_positions, new_positions, paths, events=None, metrics=None, mode="RULE"):
         frames = 15

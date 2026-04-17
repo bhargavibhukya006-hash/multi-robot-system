@@ -15,7 +15,7 @@ def get_neighbors(pos):
         (x, y-1)
     ]
 
-def astar(start, goal, world):
+def astar(start, goal, world, local_view=None, memory=None):
     open_list = []
     heapq.heappush(open_list, (0, start))
 
@@ -36,10 +36,20 @@ def astar(start, goal, world):
             return path
 
         for neighbor in get_neighbors(current):
-            if not world.is_valid_position(neighbor):
-                continue
+            if local_view:
+                if neighbor not in local_view['visible_cells']:
+                    continue
+                if neighbor in local_view['local_obstacles']:
+                    continue
+            else:
+                if not world.is_valid_position(neighbor):
+                    continue
 
             tentative_g = g_score[current] + 1
+            
+            # Memory penalty to avoid loops
+            if memory and neighbor in memory:
+                tentative_g += 20  # heavy penalty for recently visited cells
 
             if neighbor not in g_score or tentative_g < g_score[neighbor]:
                 came_from[neighbor] = current

@@ -14,6 +14,7 @@ class Coordinator:
     def __init__(self, world: World):
         # We hold a reference to the centralized world state
         self.world = world
+        self.failure_timer = {}
 
     # ==========================================
     # LOGIC 1: TASK ALLOCATION
@@ -129,9 +130,33 @@ class Coordinator:
         
         self.world.agent_status[failed_agent_id] = config.STATUS_BLOCKED
         self.world.agent_roles[failed_agent_id] = "DEAD"
+        self.failure_timer[failed_agent_id] = 0
         
         print("COORDINATOR: Initiating emergency task reallocation...")
         self.allocate_tasks()
+
+    # ==========================================
+    # LOGIC 4: RECOVERY HANDLING
+    # ==========================================
+    def update_failures(self):
+        """
+        Increments timers for failed agents and recovers them if enough time has passed.
+        """
+        recovered_agents = []
+        for aid in list(self.failure_timer.keys()):
+            self.failure_timer[aid] += 1
+            if self.failure_timer[aid] >= 5:
+                # Recover agent
+                self.world.agent_status[aid] = config.STATUS_ACTIVE
+                self.world.agent_roles[aid] = "SUPPORT"
+                recovered_agents.append(aid)
+                del self.failure_timer[aid]
+                
+        for aid in recovered_agents:
+            print(f"Agent {aid} recovered and rejoined the system")
+            
+        if recovered_agents:
+            self.allocate_tasks()
 
 
 if __name__ == "__main__":

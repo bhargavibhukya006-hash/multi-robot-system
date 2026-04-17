@@ -34,9 +34,22 @@ class World:
         }
 
         # ==========================================
-        # TARGET
+        # TARGETS AND BASES (MULTI-STAGE)
         # ==========================================
-        self.target_position = (12, 12)
+        self.target_position = (12, 12) # Kept for backward compatibility calculation
+        
+        self.scout_target = (12, 10)
+        self.secondary_target = (11, 12)
+        self.primary_target = (12, 12)
+        
+        self.completed_destination = (0, 14) # Destination for non-primary bots
+        self.final_destination = (14, 14)    # Destination for the primary bot
+
+        self.agent_stages = {
+            0: "WORKING",
+            1: "WORKING",
+            2: "WORKING"
+        }
 
         # ==========================================
         # OBSTACLES
@@ -223,6 +236,12 @@ class World:
         }
 
         self.target_position = (12, 12)
+        
+        self.agent_stages = {
+            0: "WORKING",
+            1: "WORKING",
+            2: "WORKING"
+        }
 
     # ==========================================
     # PRINT STATE (DEBUGGING)

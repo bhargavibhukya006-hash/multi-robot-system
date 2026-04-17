@@ -47,13 +47,31 @@ class Visualizer:
             )
 
     def draw_target(self):
-        x, y = self.world.target_position
-        pygame.draw.rect(self.screen, GREEN, (y * CELL_SIZE, x * CELL_SIZE, CELL_SIZE, CELL_SIZE))
-        
-        center_x = y * CELL_SIZE + CELL_SIZE // 2
-        center_y = x * CELL_SIZE + CELL_SIZE // 2
-        pygame.draw.circle(self.screen, WHITE, (center_x, center_y), CELL_SIZE // 3)
-        pygame.draw.circle(self.screen, GREEN, (center_x, center_y), CELL_SIZE // 4)
+        # Draw Operational Targets (where bots go to "do work")
+        targets = [
+            (self.world.primary_target, GREEN),
+            (self.world.secondary_target, (150, 200, 150)),
+            (self.world.scout_target, (200, 150, 200))
+        ]
+        for tgt, color in targets:
+            x, y = tgt
+            pygame.draw.rect(self.screen, color, (y * CELL_SIZE, x * CELL_SIZE, CELL_SIZE, CELL_SIZE))
+            center_x = y * CELL_SIZE + CELL_SIZE // 2
+            center_y = x * CELL_SIZE + CELL_SIZE // 2
+            pygame.draw.circle(self.screen, WHITE, (center_x, center_y), CELL_SIZE // 3)
+            pygame.draw.circle(self.screen, color, (center_x, center_y), CELL_SIZE // 4)
+
+        # Draw Bases / Destinations (where bots wait after finishing)
+        bases = [
+            (self.world.final_destination, GREEN),
+            (self.world.completed_destination, GRAY)
+        ]
+        for base, color in bases:
+            x, y = base
+            pygame.draw.rect(self.screen, LIGHT_BLUE, (y * CELL_SIZE, x * CELL_SIZE, CELL_SIZE, CELL_SIZE), 3) # Outline
+            center_x = y * CELL_SIZE + CELL_SIZE // 2
+            center_y = x * CELL_SIZE + CELL_SIZE // 2
+            pygame.draw.circle(self.screen, color, (center_x, center_y), CELL_SIZE // 5)
 
     def draw_paths(self, paths):
         if not paths:

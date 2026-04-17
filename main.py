@@ -56,18 +56,29 @@ metrics = {
 vis.update(metrics=metrics, mode=MODE)
 
 # Run simulation
+<<<<<<< HEAD
 MAX_STEPS = 1000
 for step in range(MAX_STEPS):
+=======
+step = 0
+while True:
+>>>>>>> ac811d2026f0aac0a1b1260533531e6fc016f245
     print(f"\n--- STEP {step} ---")
     metrics['steps_taken'] += 1
     
     events = []
 
+<<<<<<< HEAD
     # 1. Update failures
     coord.update_failures()
 
     # 2. Allocate tasks
     coord.allocate_tasks()
+=======
+    # 1. Allocate tasks only on the first step
+    if step == 0:
+        coord.allocate_tasks()
+>>>>>>> ac811d2026f0aac0a1b1260533531e6fc016f245
 
     # 3. Simulate failure at step 5
     if step == 5:
@@ -84,17 +95,21 @@ for step in range(MAX_STEPS):
         start = w.agent_positions[aid]
         role = w.agent_roles[aid]
 
-        # Role-based goal assignment
+        # Role-based multi-stage goal assignment
         if role == "PRIMARY_CARRIER":
-            goal = w.target_position
+            if start == w.primary_target:
+                w.agent_stages[aid] = "FINISHED"
+            goal = w.primary_target if w.agent_stages[aid] == "WORKING" else w.final_destination
 
         elif role == "SECONDARY_CARRIER":
-            goal = (max(0, min(w.grid_size - 1, w.target_position[0] - 1)),
-                    w.target_position[1])
+            if start == w.secondary_target:
+                w.agent_stages[aid] = "FINISHED"
+            goal = w.secondary_target if w.agent_stages[aid] == "WORKING" else w.completed_destination
 
         elif role == "SCOUT":
-            goal = (w.target_position[0],
-                    max(0, min(w.grid_size - 1, w.target_position[1] - 2)))
+            if start == w.scout_target:
+                w.agent_stages[aid] = "FINISHED"
+            goal = w.scout_target if w.agent_stages[aid] == "WORKING" else w.completed_destination
 
         else:
             goal = w.target_position
@@ -140,8 +155,25 @@ for step in range(MAX_STEPS):
     new_positions = {aid: pos for aid, pos in w.agent_positions.items()}
     vis.animate_step(old_positions, new_positions, paths, events, metrics, MODE)
 
+<<<<<<< HEAD
     if metrics['task_completed']:
         break
+=======
+    # Check if everyone is at their final parking spot
+    all_finished = True
+    for aid in w.get_active_agents():
+        pos = w.agent_positions[aid]
+        role = w.agent_roles[aid]
+        if role == "PRIMARY_CARRIER" and pos != w.final_destination:
+            all_finished = False
+        elif role in ["SECONDARY_CARRIER", "SCOUT"] and pos != w.completed_destination:
+            all_finished = False
+
+    if all_finished and step > 5:
+        break
+        
+    step += 1
+>>>>>>> ac811d2026f0aac0a1b1260533531e6fc016f245
 
 # ==========================================
 # METRICS AND END
